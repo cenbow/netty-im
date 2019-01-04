@@ -2,7 +2,6 @@ package cn.zlmthy.framework.netty.im.server;
 
 
 import cn.zlmthy.framework.codec.kryo.pool.KryoPool;
-import cn.zlmthy.framework.netty.im.server.handler.NettyServerDispatchHandler;
 import cn.zlmthy.framework.netty.im.server.init.KryoNettyServerChannelInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;

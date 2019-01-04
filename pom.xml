@@ -11,6 +11,7 @@
     <modules>
         <module>netty-im-common</module>
         <module>netty-im-server</module>
+        <module>netty-im-client</module>
     </modules>
 
     <name>netty-im</name>

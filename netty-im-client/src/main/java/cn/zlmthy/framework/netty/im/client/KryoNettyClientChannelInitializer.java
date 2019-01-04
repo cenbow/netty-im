@@ -1,19 +1,19 @@
-package cn.zlmthy.framework.netty.im.server.init;
+package cn.zlmthy.framework.netty.im.client;
 
 import cn.zlmthy.framework.codec.kryo.KryoDecoder;
 import cn.zlmthy.framework.codec.kryo.KryoEncoder;
 import cn.zlmthy.framework.codec.kryo.pool.KryoPool;
-import cn.zlmthy.framework.netty.im.server.handler.NettyServerDispatchHandler;
+import cn.zlmthy.framework.netty.im.client.handler.NettyClientDispatchHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
-@Component
-public class KryoNettyServerChannelInitializer extends ChannelInitializer<SocketChannel> {
+public class KryoNettyClientChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    @Resource
+    private NettyClientDispatchHandler clientDispatchHandler;
 
     @Resource
     private KryoPool kryoSerializationFactory;
@@ -42,6 +42,6 @@ public class KryoNettyServerChannelInitializer extends ChannelInitializer<Socket
         /*HTTP 消息的合并处理*/
         .addLast(new HttpObjectAggregator(Integer.MAX_VALUE))
         .addLast(new KryoDecoder(kryoSerializationFactory))
-        .addLast(new NettyServerDispatchHandler());
+        .addLast(clientDispatchHandler);
     }
 }
