@@ -1,25 +1,16 @@
 package cn.zlmthy.framework.codec.kryo;
 
-import cn.zlmthy.framework.codec.kryo.pool.KryoPool;
+import cn.zlmthy.framework.dto.Request;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-@ChannelHandler.Sharable
-public final class KryoEncoder extends MessageToByteEncoder<Object> {
-
-    private final KryoPool kryoPool;
-
-    public KryoEncoder(final KryoPool kryoSerializationFactory) {
-        this.kryoPool = kryoSerializationFactory;
-    }
+public class KryoEncoder extends MessageToByteEncoder<Request> {
 
     @Override
-    protected void encode(final ChannelHandlerContext ctx, final Object msg, final ByteBuf out) throws Exception {
-        int startIdx = out.writerIndex();
-        kryoPool.encode(out, msg);
-        int endIdx = out.writerIndex();
-        out.setInt(startIdx, endIdx - startIdx - 4);
+    protected void encode(ChannelHandlerContext ctx, Request object, ByteBuf out) throws Exception {
+        KryoSerializer.serialize(object, out);
+        ctx.flush();
     }
+
 }

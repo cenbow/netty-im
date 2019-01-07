@@ -5,3 +5,5 @@ server:
 spring:
   application:
     name: netty-im-client
+logging:
+  config: classpath:log4j2.xml

@@ -1,15 +1,17 @@
 package cn.zlmthy.framework.codec.kryo;
 
-import cn.zlmthy.framework.codec.kryo.pool.KryoPool;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
 
-public class KryoDecoder extends LengthFieldBasedFrameDecoder {
+import java.util.List;
 
-    private final KryoPool kryoPool;
+public class KryoDecoder extends ByteToMessageDecoder {
 
-    public KryoDecoder(final KryoPool kryoSerializationFactory) {
-        super(10485760, 0, 4, 0, 4);
-        this.kryoPool = kryoSerializationFactory;
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        Object obj = KryoSerializer.deserialize(in);
+        out.add(obj);
     }
 
 }

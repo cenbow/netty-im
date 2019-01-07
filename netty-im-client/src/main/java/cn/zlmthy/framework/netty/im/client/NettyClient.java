@@ -1,27 +1,22 @@
 package cn.zlmthy.framework.netty.im.client;
 
 
-import cn.zlmthy.framework.codec.kryo.pool.KryoPool;
 import cn.zlmthy.framework.dto.Request;
-import cn.zlmthy.framework.netty.im.client.handler.NettyClientDispatchHandler;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.Charset;
+import javax.annotation.PostConstruct;
 
+@Log4j2
 @Component
 @PropertySource(value = "classpath:client.properties")
 public class NettyClient {
@@ -49,17 +44,20 @@ public class NettyClient {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(bossGroup)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.TCP_NODELAY, true)
                 .handler(new KryoNettyClientChannelInitializer());
         try {
 
             ChannelFuture future = bootstrap.connect(serverIp, servePort).sync();
-            Request request = new Request();
-            request.setReqNo(123123L);
-            request.setTimestamp(System.currentTimeMillis());
-            request.setData(msg);
-            future.channel().writeAndFlush(request);
-            System.out.println(future.isDone());
+            log.info("connection success!");
+            if (future.channel().isOpen()){
+                log.info("channel is open!");
+                Request request = new Request();
+                request.setReqNo(123123L);
+                request.setTimestamp(System.currentTimeMillis());
+                request.setData(msg);
+                boolean success = future.channel().writeAndFlush(request).isSuccess();
+                log.info("send to server {}",success);
+            }
             // 等待直到连接中断
             future.channel().closeFuture().sync();
         } catch (final InterruptedException ex) {
@@ -67,11 +65,4 @@ public class NettyClient {
         }
     }
 
-    @Bean
-    @Primary
-    public KryoPool getKryoPool(){
-        KryoPool pool = new KryoPool();
-        pool.init();
-        return pool;
-    }
 }

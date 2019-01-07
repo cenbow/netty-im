@@ -1,13 +1,9 @@
-package cn.zlmthy.framework.codec.kryo.pool;
+package cn.zlmthy.framework.codec.kryo;
 
 import cn.zlmthy.framework.dto.Request;
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
 import de.javakaffee.kryoserializers.*;
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import java.lang.reflect.InvocationHandler;
 import java.math.BigDecimal;
@@ -18,34 +14,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-final class PooledKryoFactory extends BasePooledObjectFactory<Kryo> {
+public abstract class KryoFactory {
 
-    @Override
-    public Kryo create() throws Exception {
-        return createKryo();
+
+    private final static KryoFactory threadFactory = new ThreadLocalKryoFactory();
+
+    protected KryoFactory() {
     }
 
-    @Override
-    public PooledObject<Kryo> wrap(Kryo kryo) {
-        return new DefaultPooledObject<Kryo>(kryo);
+    public static KryoFactory getDefaultFactory() {
+        return threadFactory;
     }
 
-    private Kryo createKryo() {
-        Kryo kryo = new KryoReflectionFactorySupport() {
-
-            @Override
-            public Serializer<?> getDefaultSerializer(@SuppressWarnings("rawtypes") final Class clazz) {
-                if (EnumMap.class.isAssignableFrom(clazz)) {
-                    return new EnumMapSerializer();
-                }
-                if (SubListSerializers.ArrayListSubListSerializer.canSerialize(clazz) || SubListSerializers.JavaUtilSubListSerializer.canSerialize(clazz)) {
-                    return SubListSerializers.createFor(clazz);
-                }
-                return super.getDefaultSerializer(clazz);
-            }
-        };
+    protected Kryo createKryo() {
+        Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(false);
-        kryo.register(Request.class);
         kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());
         kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer());
         kryo.register(InvocationHandler.class, new JdkProxySerializer());
@@ -57,8 +40,8 @@ final class PooledKryoFactory extends BasePooledObjectFactory<Kryo> {
         kryo.register(UUID.class, new UUIDSerializer());
         UnmodifiableCollectionsSerializer.registerSerializers(kryo);
         SynchronizedCollectionsSerializer.registerSerializers(kryo);
-
         kryo.register(HashMap.class);
+        kryo.register(Request.class);
         kryo.register(ArrayList.class);
         kryo.register(LinkedList.class);
         kryo.register(HashSet.class);
@@ -81,7 +64,7 @@ final class PooledKryoFactory extends BasePooledObjectFactory<Kryo> {
         kryo.register(int[].class);
         kryo.register(float[].class);
         kryo.register(double[].class);
-        UnmodifiableCollectionsSerializer.registerSerializers(kryo);
         return kryo;
     }
+
 }

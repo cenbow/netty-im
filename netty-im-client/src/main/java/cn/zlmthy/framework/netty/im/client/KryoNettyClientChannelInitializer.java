@@ -2,46 +2,36 @@ package cn.zlmthy.framework.netty.im.client;
 
 import cn.zlmthy.framework.codec.kryo.KryoDecoder;
 import cn.zlmthy.framework.codec.kryo.KryoEncoder;
-import cn.zlmthy.framework.codec.kryo.pool.KryoPool;
 import cn.zlmthy.framework.netty.im.client.handler.NettyClientDispatchHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpContentCompressor;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
 
 import javax.annotation.Resource;
 
 public class KryoNettyClientChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    @Resource
-    private NettyClientDispatchHandler clientDispatchHandler;
 
-    @Resource
-    private KryoPool kryoSerializationFactory;
 
     @Override
     protected void initChannel(final SocketChannel ch) throws Exception {
         /*HTTP 服务的解码器*/
-        ch.pipeline().addLast(new HttpServerCodec())
+        ch.pipeline()
         /*HTTP 消息的合并处理*/
         .addLast(new HttpObjectAggregator(2048))
-        /* http-request解码器
-         * http服务器端对request解码
-         */
-        .addLast("decoder", new HttpRequestDecoder())
-        /*
-         * http-response解码器
-         * http服务器端对response编码
-         */
-        .addLast(new HttpResponseDecoder())
+        .addLast("decoder", new KryoDecoder())
+        .addLast("encoder", new KryoEncoder())
         .addLast("aggregator", new HttpObjectAggregator(1048576))
         /*
          * 压缩
          */
         .addLast("deflater", new HttpContentCompressor())
-        .addLast(new KryoEncoder(kryoSerializationFactory))
+//        .addLast("encoder", new KryoEncoder(kryoSerializationFactory))
         /*HTTP 消息的合并处理*/
         .addLast(new HttpObjectAggregator(Integer.MAX_VALUE))
-        .addLast(new KryoDecoder(kryoSerializationFactory))
-        .addLast(clientDispatchHandler);
+//        .addLast("decoder",new KryoDecoder(kryoSerializationFactory))
+        .addLast(new NettyClientDispatchHandler());
     }
 }
